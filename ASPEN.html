@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en" >
+
+<head>
+  <meta charset="UTF-8">
+  
+  
+  
+
+  <title>ASPEN</title>
+
+    <link rel="canonical" href="https://codepen.io/Braeden08/pen/KwpOzep">
+  
+  
+  
+  
+<style>
+* {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #0f2027 100%);
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Navigation */
+        .nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(10, 10, 10, 0.9);
+            backdrop-filter: blur(20px);
+            z-index: 1000;
+            padding: 20px 0;
+            transition: all 0.3s ease;
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: 700;
+            color: #00ff88;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 40px;
+        }
+
+        .nav-links a {
+            color: #ffffff;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+            position: relative;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: #00ff88;
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        .nav-links a:hover {
+            color: #00ff88;
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero h1 {
+            font-size: 4rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+            background: linear-gradient(45deg, #00ff88, #ffffff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+                      text-transform: uppercase;
+
+            animation: slideUp 1s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hero p {
+            font-size: 1.3rem;
+            margin-bottom: 40px;
+            color: #b0b0b0;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            animation: slideUp 1s ease-out 0.2s both;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(45deg, #00ff88, #00cc66);
+            color: #ffffff;
+            padding: 15px 40px;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0, 255, 136, 0.3);
+            animation: slideUp 1s ease-out 0.4s both;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 255, 136, 0.5);
+        }
+
+        /* Services Section */
+        .services {
+            padding: 100px 0;
+            background: linear-gradient(135deg, #0f2027 0%, #203a43 100%);
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 60px;
+            color: #00ff88;
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 40px;
+            margin-top: 60px;
+        }
+
+        .service-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(0, 255, 136, 0.2);
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .service-card:hover {
+            transform: translateY(-10px);
+            border-color: #00ff88;
+            box-shadow: 0 20px 40px rgba(0, 255, 136, 0.2);
+        }
+
+        .service-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            color: #00ff88;
+        }
+
+        .service-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #ffffff;
+        }
+
+        .service-card p {
+            color: #b0b0b0;
+            line-height: 1.6;
+        }
+
+        /* About Section */
+        .about {
+            padding: 100px 0;
+            background: linear-gradient(135deg, #0a0a0a 0%, #0f2027 100%);
+        }
+
+        .about-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+        }
+
+        .about-text h2 {
+            font-size: 2.5rem;
+            margin-bottom: 30px;
+            color: #00ff88;
+        }
+
+        .about-text p {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: #b0b0b0;
+            margin-bottom: 20px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .stat {
+            text-align: center;
+            padding: 20px;
+            background: rgba(0, 255, 136, 0.1);
+            border-radius: 15px;
+            border: 1px solid rgba(0, 255, 136, 0.2);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #00ff88;
+        }
+
+        .stat-label {
+            color: #b0b0b0;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+
+        /* Contact Section */
+        .contact {
+            padding: 100px 0;
+            background: linear-gradient(135deg, #203a43 0%, #0a0a0a 100%);
+        }
+
+        .contact-content {
+            max-width: 600px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .contact h2 {
+            font-size: 2.5rem;
+            margin-bottom: 30px;
+            color: #00ff88;
+        }
+
+        .contact p {
+            font-size: 1.1rem;
+            color: #b0b0b0;
+            margin-bottom: 40px;
+        }
+
+        .contact-form {
+            display: grid;
+            gap: 20px;
+        }
+
+        .form-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .contact-form input,
+        .contact-form textarea {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(0, 255, 136, 0.2);
+            border-radius: 10px;
+            padding: 15px;
+            color: #ffffff;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .contact-form input:focus,
+        .contact-form textarea:focus {
+            outline: none;
+            border-color: #00ff88;
+        }
+
+        .contact-form textarea {
+            grid-column: 1 / -1;
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .submit-btn {
+            background: linear-gradient(45deg, #00ff88, #00cc66);
+            color: #ffffff;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0, 255, 136, 0.3);
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 40px rgba(0, 255, 136, 0.5);
+        }
+
+        /* Footer */
+        .footer {
+            background: #0a0a0a;
+            padding: 40px 0;
+            text-align: center;
+            border-top: 1px solid rgba(0, 255, 136, 0.2);
+        }
+
+        .footer p {
+            color: #b0b0b0;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero p {
+                font-size: 1.1rem;
+            }
+
+            .section-title {
+                font-size: 2rem;
+            }
+
+            .services-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .about-content {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .form-group {
+                grid-template-columns: 1fr;
+            }
+        }
+</style>
+
+  
+  
+  
+</head>
+
+<body>
+  <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aspen - Elite Web Development & Cybersecurity</title>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="nav-container">
+            <div class="logo">ASPEN COLLATION</div>
+            <ul class="nav-links">
+                <li><a href="#home">Home</a></li>
+                <li><a href="#services">Services</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <canvas id="canvas"></canvas>
+        <div class="container">
+            <div class="hero-content">
+                <h1>ASPEN COLLATION</h1>
+                <p>We’re a youth-led organization offering top-tier web development and offer services—completely free. Our mission is to give youth real-world, hands-on experience by working on actual projects. We provide opportunities to learn essential skills like HTML, CSS, JavaScript, C++, SQL, and more, all while making a real impact.</p>
+                <a href="#contact" class="cta-button">Start Your Project</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section class="services" id="services">
+        <div class="container">
+            <h2 class="section-title">Our Expertise</h2>
+            <div class="services-grid">
+                <div class="service-card">
+                    <div class="service-icon">⚡</div>
+                    <h3>Web Development</h3>
+                    <p>Custom web applications built with cutting-edge technologies. From responsive design to complex backend systems, we deliver solutions that perform at scale.</p>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon">🛡️</div>
+                    <h3>Backend Development</h3>
+                    <p>Our backend development uses only Google systems, making our platforms easy to use, reliable, and entirely free. By building on tools like Firebase and Google Cloud, we ensure a simple setup and seamless experience for everyone—no hidden costs or technical headaches.</p>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon">🚀</div>
+                    <h3>Web Managment</h3>
+                    <p>Lightning-fast load times and seamless user experiences. Our optimization techniques ensure your applications run flawlessly under any conditions.</p>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon">🔧</div>
+                    <h3>System Architecture</h3>
+                    <p>Scalable infrastructure design and cloud solutions. We architect systems that grow with your business and handle enterprise-level demands.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section class="about" id="about">
+        <div class="container">
+            <div class="about-content">
+                <div class="about-text">
+                    <h2>Why Choose Aspen?</h2>
+                    <p>Working with us means getting high-quality web development and IT services that are built to grow with you. By using Google systems like Firebase and Google Cloud, we ensure our solutions can easily scale as your needs change—whether you’re starting small or expanding fast.</p>
+                    <p>Our youth-led approach is also built for growth. As we take on more projects, we train and involve even more talented teens, creating a sustainable cycle of learning and impact. You get flexible, future-ready technology, while helping empower the next generation and supporting a service model that stays free and accessible for everyone.</p>
+                </div>
+                <div class="stats">
+                    <div class="stat">
+                        <div class="stat-number">99.9%</div>
+                        <div class="stat-label">Uptime Guarantee</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">24/7</div>
+                        <div class="stat-label">Security Monitoring</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">100+</div>
+                        <div class="stat-label">Projects Secured</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">0</div>
+                        <div class="stat-label">Security Breaches</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section class="contact" id="contact">
+        <div class="container">
+            <div class="contact-content">
+                <h2>Ready to Dominate?</h2>
+                <p>Let's discuss how Aspen can transform your digital presence into an unstoppable force. Contact us today for a consultation that will redefine what's possible.</p>
+                <form class="contact-form">
+                    <div class="form-group">
+                        <input type="text" placeholder="Your Name" required>
+                        <input type="email" placeholder="Your Email" required>
+                    </div>
+                    <input type="text" placeholder="Organztion Name">
+                    <textarea placeholder="Tell us about your project..." required></textarea>
+                    <button type="submit" class="submit-btn">Send Message</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 Aspen. All rights reserved. | ASPEN COLLATION
+</p>
+        </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/paper.js/0.12.15/paper-full.min.js"></script>
+
+</body>
+</html>
+  
+    <script id="rendered-js" >
+// Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+
+        // Form submission handler
+        document.querySelector('.contact-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('Thank you for your message! We will contact you within 24 hours.');
+            this.reset();
+        });
+
+        // Navbar scroll effect
+        window.addEventListener('scroll', function() {
+            const nav = document.querySelector('.nav');
+            if (window.scrollY > 50) {
+                nav.style.background = 'rgba(10, 10, 10, 0.95)';
+            } else {
+                nav.style.background = 'rgba(10, 10, 10, 0.9)';
+            }
+        });
+
+        /* ====================== *
+         *  Initiate Canvas       *
+         * ====================== */
+        paper.install(window);
+        paper.setup(document.getElementById("canvas"));
+
+        // Paper JS Variables
+        var canvasWidth, 
+            canvasHeight,
+            canvasMiddleX,
+            canvasMiddleY;
+
+        var shapeGroup = new Group();
+        var positionArray = [];
+
+        function getCanvasBounds() {
+            // Get current canvas size
+            canvasWidth = view.size.width;
+            canvasHeight = view.size.height;
+            canvasMiddleX = canvasWidth / 2;
+            canvasMiddleY = canvasHeight / 2;
+            
+            // Set path positions
+            var position1 = {
+                x: (canvasMiddleX / 2) + 100,
+                y: 100, 
+            };
+
+            var position2 = {
+                x: 200,
+                y: canvasMiddleY, 
+            };
+
+            var position3 = {
+                x: (canvasMiddleX - 50) + (canvasMiddleX / 2),
+                y: 150, 
+            };
+
+            var position4 = {
+                x: 0,
+                y: canvasMiddleY + 100, 
+            };
+
+            var position5 = {
+                x: canvasWidth - 130,
+                y: canvasHeight - 75, 
+            };
+
+            var position6 = {
+                x: canvasMiddleX + 80,
+                y: canvasHeight - 50, 
+            };
+            
+            var position7 = {
+                x: canvasWidth + 60,
+                y: canvasMiddleY - 50, 
+            };
+            
+            var position8 = {
+                x: canvasMiddleX + 100,
+                y: canvasMiddleY + 100, 
+            };
+
+            positionArray = [position3, position2, position5, position4, position1, position6, position7, position8];
+        }
+
+        /* ====================== *
+         * Create Shapes          *
+         * ====================== */
+        function initializeShapes() {
+            // Get Canvas Bounds
+            getCanvasBounds();
+
+            var shapePathData = [
+                'M231,352l445-156L600,0L452,54L331,3L0,48L231,352', 
+                'M0,0l64,219L29,343l535,30L478,37l-133,4L0,0z', 
+                'M0,65l16,138l96,107l270-2L470,0L337,4L0,65z',
+                'M333,0L0,94l64,219L29,437l570-151l-196-42L333,0',
+                'M331.9,3.6l-331,45l231,304l445-156l-76-196l-148,54L331.9,3.6z',
+                'M389,352l92-113l195-43l0,0l0,0L445,48l-80,1L122.7,0L0,275.2L162,297L389,352',
+                'M 50 100 L 300 150 L 550 50 L 750 300 L 500 250 L 300 450 L 50 100',
+                'M 700 350 L 500 350 L 700 500 L 400 400 L 200 450 L 250 350 L 100 300 L 150 50 L 350 100 L 250 150 L 450 150 L 400 50 L 550 150 L 350 250 L 650 150 L 650 50 L 700 150 L 600 250 L 750 250 L 650 300 L 700 350 '
+            ];
+
+            for (var i = 0; i < shapePathData.length; i++) {
+                // Create shape
+                var headerShape = new Path({
+                    strokeColor: 'rgba(0, 255, 136, .4)',
+                    strokeWidth: 2,
+                    parent: shapeGroup,
+                });
+                // Set path data
+                headerShape.pathData = shapePathData[i];
+                headerShape.scale(2);
+                // Set path position
+                headerShape.position = positionArray[i];
+            }
+        }
+
+        initializeShapes();
+
+        /* ====================== *
+         * Animation              *
+         * ====================== */
+        view.onFrame = function paperOnFrame(event) {
+            if (event.count % 4 === 0) {
+                // Slows down frame rate
+                for (var i = 0; i < shapeGroup.children.length; i++) {
+                    if (i % 2 === 0) {
+                        shapeGroup.children[i].rotate(-.1);
+                    } else {
+                        shapeGroup.children[i].rotate(.1);
+                    }
+                }
+            }
+        };
+
+        view.onResize = function paperOnResize() {
+            getCanvasBounds();
+
+            for (var i = 0; i < shapeGroup.children.length; i++) {
+                shapeGroup.children[i].position = positionArray[i];
+            }
+
+            if (canvasWidth < 700) {
+                shapeGroup.children[3].opacity = 0;
+                shapeGroup.children[2].opacity = 0;
+                shapeGroup.children[5].opacity = 0;
+            } else {
+                shapeGroup.children[3].opacity = 1;
+                shapeGroup.children[2].opacity = 1;
+                shapeGroup.children[5].opacity = 1;
+            }
+        };
+  </script>
+
+  
+</body>
+
+</html>
