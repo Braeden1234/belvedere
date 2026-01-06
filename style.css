@@ -127,6 +127,20 @@
             animation: slideUp 1s ease-out;
         }
 
+        .hero1 h1 {
+            font-size: 4rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+            background: linear-gradient(45deg, #00ff88, #ffffff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+                      text-transform: uppercase;
+
+            animation: slideUp 1s ease-out;
+        }
+
+
         @keyframes slideUp {
             from { opacity: 0; transform: translateY(50px); }
             to { opacity: 1; transform: translateY(0); }
