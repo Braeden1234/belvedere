@@ -365,16 +365,8 @@
         }
 
         /* Footer */
-        .footer {
-            background: #0a0a0a;
-            padding: 40px 0;
-            text-align: center;
-            border-top: 1px solid rgba(0, 255, 136, 0.2);
-        }
 
-        .footer p {
-            color: #b0b0b0;
-        }
+
 
         /* Responsive Design */
         @media (max-width: 768px) {
@@ -415,6 +407,107 @@
             color: #ffffff;
             font-size: 1rem;
             transition: border-color 0.3s ease;
+}
+@import url('https://fonts.googleapis.com/css2?family=Anta&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Anta&family=Climate+Crisis&display=swap');
+
+
+/* === GLOBAL === */
+
+.center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.anta-regular {
+  font-family: "Anta", sans-serif;
+}
+
+.footer {
+  font-family: "Anta", sans-serif;
+  margin-top: auto;
+                        color: #b0b0b0;
+              background: #0a0a0a;
+  padding: 5vw 5vw 8vw 5vw;
+            text-align: center;
+            border-top: 1px solid rgba(0, 255, 136, 0.2);
+        }
+
+
+.footer-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.footer-title {
+  font-size: 4vw;
+  color: #a78bfa;
+  margin-bottom: 1vw;
+}
+
+.footer-text {
+  font-size: 2vw;
+  margin-bottom: 2vw;
+}
+
+.subscription-form {
+  display: flex;
+  flex-direction: row;
+  gap: 1vw;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.subscription-form input[type="email"] {
+  padding: 1vw;
+  border-radius: 0.8vw;
+  border: none;
+  font-size: 1.8vw;
+  width: 50vw;
+  max-width: 60vw;
+  outline: none;
+}
+
+.subscription-form button {
+  padding: 1vw 2vw;
+  border-radius: 0.8vw;
+  border: none;
+  background-color: #a78bfa;
+  color: #0b0b1f;
+  font-weight: bold;
+  font-size: 1.8vw;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.subscription-form button:hover {
+  background-color: #8b65e4;
+}
+
+.footer-links {
+  margin-top: 3vw;
+  font-size: 1.6vw;
+  color: #ded2e6;
+}
+
+.footer-links a {
+  color: #ded2e6;
+  text-decoration: none;
+  margin: 0 1vw;
+}
+
+.footer-links a:hover {
+  text-decoration: underline;
+  color: #a78bfa;
+}
+
+.safari-fix {
+  margin-bottom: 12vh;
+  background-color: #1c1a3f;
 }
 
 .menu-select {
