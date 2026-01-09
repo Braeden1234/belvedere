@@ -1,4 +1,20 @@
-   <section class="hero" id="home">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>
+    fetch('navbar.html')
+        .then(response => response.text())
+        .then(data => {
+            document.getElementById('navbar').innerHTML = data;
+        });
+</script>
+<link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BELVEDERE TECHNOLOGIES</title>
+    <div id="navbar"></div>
+</head>
+<section class="hero" id="home">
         <canvas id="canvas"></canvas>
         <div class="container">
             <div class="hero-content">
@@ -79,3 +95,4 @@
 			    </div>
         </div>
     </section>
+		   </html>
