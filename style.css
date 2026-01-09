@@ -522,14 +522,21 @@ box-shadow: 0 10px 30px rgba(0, 255, 136, 0.3);
       color: black;
 }
 .maincontent{
-			width: 70%;
+ display: flex;
+  justify-content: center; /* Horizontally centers content */
+  align-items: center; /* Vertically centers content */  			width: 90vw;
     		margin: 0 auto;
 		}
 		.peeplist{
-			width: 80%;
+       display: flex;
+  justify-content: center; /* Horizontally centers content */
+  align-items: center; /* Vertically centers content */
+			width: 100%;
+      justify-content: center;
     		margin: 0 auto;
 		}
 		.staff-list-box ul {
+     
 		    display: -webkit-box;
 		    display: -webkit-flex;
 		    display: -ms-flexbox;
