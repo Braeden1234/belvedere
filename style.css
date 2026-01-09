@@ -516,5 +516,144 @@ box-shadow: 0 10px 30px rgba(0, 255, 136, 0.3);
 
 .menu-select {
       color: black;
-
 }
+.maincontent{
+			width: 70%;
+    		margin: 0 auto;
+		}
+		.peeplist{
+			width: 80%;
+    		margin: 0 auto;
+		}
+		.staff-list-box ul {
+		    display: -webkit-box;
+		    display: -webkit-flex;
+		    display: -ms-flexbox;
+		    display: flex;
+		    -webkit-box-orient: horizontal;
+		    -webkit-box-direction: normal;
+		    -webkit-flex-direction: row;
+		    -ms-flex-direction: row;
+		    flex-direction: row;
+		    -webkit-flex-wrap: wrap;
+		    -ms-flex-wrap: wrap;
+		    flex-wrap: wrap;
+		    -webkit-box-align: start;
+		    -webkit-align-items: flex-start;
+		    -ms-flex-align: start;
+		    align-items: flex-start;
+		    -webkit-box-pack: start;
+		    -webkit-justify-content: flex-start;
+		    -ms-flex-pack: start;
+		    justify-content: flex-start;
+		}
+		.staff-list-box li {
+		    min-width: 15%;
+		    max-width: 180px;
+		    box-sizing: border-box;
+		    display: inline-block;
+		    padding: 0;
+		    margin: 0 1.2em 0.5em 0;
+		}
+		.staff-list-box a {
+		    display: block;
+		    padding: 0.5em;
+		    border-radius: 5px;
+		    text-decoration: none;
+		    text-align: center;
+		}
+		.staff-list-box a:focus, .staff-list-box a:hover, .staff-list-box a:active {
+		    background-color: #00458c;
+		    text-decoration: none;
+		    color: #ffffff;
+		}
+		.staff-list-box img, .staff-list-box span {
+		    display: block;
+		    float: none !important;
+		}
+		.staff-list-box img {
+		    width: 100%;
+		    height: auto;
+		    border-radius: 10%;
+		}
+		.staff-list-box .name {
+		    font-size: 1em;
+		    font-weight: bold;
+		    padding-bottom: 5px;
+  color: var(--secondary-color);
+		}
+		.staff-list-box .title {
+		    font-size: 12px;
+        color: var(--secondary-color);
+
+		}
+
+.header32 {
+   background: linear-gradient(45deg, #00ff88, #ffffff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+                      text-transform: uppercase;
+}
+		.staff-list-box h2, .staff-list-box h3 {
+		    clear: both;
+		    padding-top: 1.5em;
+		    margin-bottom: 1em;
+		}
+		.staff-list-box h2 {
+		    padding-bottom: 0.25em;
+		    font-size: 2.1em;
+       background: linear-gradient(45deg, #00ff88, #ffffff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+                      text-transform: uppercase;
+		    border-bottom: 3px solid transparent;
+                  border-image: linear-gradient(45deg, #00ff88, #ffffff) 1;
+
+		}
+		.index {
+		    display: -webkit-box;
+		    display: -webkit-flex;
+		    display: -ms-flexbox;
+		    display: flex;
+		    -webkit-flex-flow: row wrap;
+		    -ms-flex-flow: row wrap;
+		    flex-flow: row wrap;
+		}
+		.index li {
+		    width: 46%;
+		    margin: 0px 0px 0.45em 1em;
+		}
+		#nerd3-staff-legend {
+		    margin:20px auto!important;
+		    padding:0;
+		    width:638px;
+		}
+		#nerd3-staff-legend li {
+		    list-style:none;
+		    margin:0;
+		    padding:0 20px 0 0;
+		    display:inline-block;
+		    font-size:13px;
+		    line-height:26px;
+		}
+		#nerd3-staff-legend li span {
+		    display:inline-block;
+		    width:20px;
+		    height:20px;
+		    vertical-align:middle;
+		    margin:0 5px 4px 0;
+		}
+		#nerd3-staff-legend li.admin span {
+		    background: var(--secondary-color);
+		}
+		#nerd3-staff-legend li.technician span, #nerd3-staff-legend li.supermod span {
+		    background: var(--secondary-color);
+		}
+		#nerd3-staff-legend li.mod span {
+		    background:#5a0ed2;
+		}
+		#nerd3-staff-legend li.trainee span {
+		    background:#ffff55;
+		}
