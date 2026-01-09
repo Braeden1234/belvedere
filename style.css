@@ -128,7 +128,7 @@
             font-size: 4rem;
             font-weight: 800;
             margin-bottom: 20px;
-            background: linear-gradient(45deg, #00ff88, #ffffff);
+            background: var(header);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -141,7 +141,7 @@
             font-size: 4rem;
             font-weight: 800;
             margin-bottom: 20px;
-            background: linear-gradient(45deg, #00ff88, #ffffff);
+            background: var(header);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
