@@ -1,18 +1,9 @@
 <!DOCTYPE html>
 <html>
-	<head>
-		<link rel="stylesheet" href="style.css">
-		<script>
-    fetch('navbar.html')
-        .then(response => response.text())
-        .then(data => {
-            document.getElementById('navbar').innerHTML = data;
-        });
-</script>
-	</head>
+<body>
    <canvas class="header" id="canvas"></canvas>
 
-<img class="profile" src="staff-profiles/Board-of-Directors/photos/brady.jpg"></img>
+<img class="profile" src="https://raw.githubusercontent.com/Braeden1234/belvedere/refs/heads/main/staff-profiles/Board-of-Directors/photos/brady.jpg"></img>
 </body>
 <div class="titles">
 
@@ -29,8 +20,8 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/paper.js/0.12.15/paper-full.min.js"></script>
-<style>
-  * {
+<style?
+	* {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
@@ -147,9 +138,10 @@ body {
 .pinterest {
   	background: #cb2027;
 }
-</style>
-  <script>
-            paper.install(window);
+
+</style?
+	<script>
+	        paper.install(window);
         paper.setup(document.getElementById("canvas"));
 
         // Paper JS Variables
@@ -280,18 +272,5 @@ body {
                 shapeGroup.children[5].opacity = 1;
             }
         };
-  </script>
-	  <div id="footer"></div>
-    <script>
-    fetch('footer.html')
-        .then(response => response.text())
-        .then(data => {
-            document.getElementById('footer').innerHTML = data;
-        });
 </script>
-
-          <script src="script.js" defer></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/paper.js/0.12.15/paper-full.min.js"></script>
-</body>
 </html>
