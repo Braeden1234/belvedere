@@ -22,3 +22,38 @@
     </div>
   </div>
 </footer>
+<script>
+  async function submitForm(event) {
+    event.preventDefault(); // Prevent the default form submission
+
+    const emailInput = document.getElementById('Email');
+    const email = emailInput.value; // Get the email value
+
+    // Validate email
+    if (!email) {
+      alert("Please enter a valid email address.");
+      return;
+    }
+
+    try {
+      const response = await fetch('https://form1.belvederetechnologies.com/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }), // Send email as JSON
+      });
+
+      if (response.ok) {
+        alert("Subscription successful!"); // Notify user of success
+        emailInput.value = ''; // Clear the input field
+      } else {
+        const errorText = await response.text();
+        alert(`Error: ${errorText}`); // Notify user of error
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert("An error occurred while submitting the form. Please try again later.");
+    }
+  }
+</script>
