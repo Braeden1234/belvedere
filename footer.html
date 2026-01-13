@@ -4,7 +4,7 @@
       <div class="footer-left">
         <h2 class="footer-title">Subscribe to Our Newsletter</h2>
         <p class="footer-text">Get the latest issues, updates, and space stories straight to your inbox.</p>
-        <form id="myAppForm" class="subscription-form" method="POST" target="_self" onsubmit="submitForm(event)">
+        <form id="myAppForm" class="subscription-form" method="POST" onsubmit="submitForm(event)">
           <input id="Email" type="email" placeholder="Enter your email" required>
           <button type="submit">Subscribe</button>
         </form>
@@ -23,22 +23,19 @@
   </div>
 </footer>
 <script>
-document.addEventListener("DOMContentLoaded", () => {
-  const form = document.getElementById("myAppForm");
-
-  form.addEventListener("submit", async (event) => {
+  async function submitForm(event) {
     event.preventDefault(); // Prevent the default form submission
 
-    const emailInput = document.getElementById("Email");
+    const emailInput = document.getElementById('Email');
     const email = emailInput.value;
 
     try {
-      const response = await fetch("https://a.nel.cloudflare.com/report/v4", {
-        method: "POST",
+      const response = await fetch('https://a.nel.cloudflare.com/report/v4?s=szar2v%2buj13ue2qe8jfjrmxcffc%2byfgjjhjr1ozx%2fwwccfjgzqhduzvr8npz7ghgtp7ma1qko42pfa%2fpgnuuael40okn6bxilfyeod1nfd%2bmqjnn5hwrmekiw0earorl0wvjmmu%2forfjs14x%2b%2fn7njanqt6svjpkaphuwk%2fys3f7felaqg%3d%3d', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email }), // Send the email in JSON format
+        body: JSON.stringify({ email }), // Send the email as JSON
       });
 
       if (!response.ok) {
@@ -46,11 +43,11 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       const result = await response.text();
-      alert("Subscription successful: " + result);
-      emailInput.value = ""; // Clear the input field after successful submission
+      alert(result); // Notify the user of the result
+      emailInput.value = ''; // Clear the input field
     } catch (error) {
-      alert("Error: " + error.message);
+      console.error('Error:', error);
+      alert('There was an error submitting your email. Please try again.');
     }
-  });
-});
+  }
 </script>
