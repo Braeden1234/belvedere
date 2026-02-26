@@ -851,8 +851,8 @@
   </script>
 
   <script>
+    // ── Master index doc ID (the URL the user pastes) ──
     let DOC_ID = '';
-    const INDEX_TAB = '0';
 
     function extractDocId(raw) {
       const clean = raw.trim();
@@ -889,11 +889,12 @@
       md:'#a07cf5', py:'#00ff88', txt:'#5a6480', svg:'#e09060'
     };
 
-    let currentProject = null, currentFileContent = '', currentInlinedHTML = '',
-        currentFilename = '', currentProjectFileMap = {};
+    // currentProjectDocId = the individual project's Google Doc ID (NOT the master index)
+    let currentProject = null, currentProjectDocId = '', currentFileContent = '',
+        currentInlinedHTML = '', currentFilename = '', currentProjectFileMap = {};
     let _deployedWin = null, _deployedChannel = null, _pollInterval = null,
         _pollFileMap = {}, _pollContents = {}, _pollHashes = {},
-        _pollUpdating = false, _pollFilename = '';
+        _pollUpdating = false, _pollFilename = '', _pollDocId = '';
 
     let _sassReady = false, _sassQ = [];
     function loadSass(fn) {
@@ -922,48 +923,60 @@
         .replace(/_{1,3}([^_\n]+)_{1,3}/g, '$1');
     }
 
-    function parseATCMap(text) {
+    // ── Parse the MASTER INDEX: ATC_Map { % Projects { .Name (@URL); } } ──
+    function parseMasterIndex(text) {
       const clean = cleanDoc(text);
+      const projects = [];
+      // Match: .ProjectName (@https://...)
+      const re = /\.\s*(\w+)\s*\(@\s*(https?:\/\/[^)]+)\)/g;
+      let m;
+      while ((m = re.exec(clean)) !== null) {
+        projects.push({ name: m[1].trim(), url: m[2].trim() });
+      }
+      return projects.length ? projects : null;
+    }
+
+    // ── Parse an individual PROJECT DOC: ATC_Map { % Branch(x) { $ Folder(y) { % FileType(ext) #INDEX { .name(@tabId); } } } } ──
+    function parseProjectDoc(text) {
+      const clean = cleanDoc(text);
+      const fileMap = {}; let htmlFilename = null; const tree = [];
+
       function collectMarkers(src, re) {
         const markers = []; let m;
         while ((m = re.exec(src)) !== null)
           markers.push({ name: m[1].trim(), start: m.index, contentStart: m.index + m[0].length });
         return markers;
       }
-      const projMarkers = collectMarkers(clean, /\$\s*Project\s*\(([^)]+)\)/g);
-      const projects = {};
-      projMarkers.forEach((proj, pi) => {
-        const projEnd = pi + 1 < projMarkers.length ? projMarkers[pi+1].start : clean.length;
-        const projSlice = clean.slice(proj.contentStart, projEnd);
-        const fileMap = {}; let htmlFilename = null; const tree = [];
-        const branchMarkers = collectMarkers(projSlice, /[%$]\s*Branch\s*\(([^)]+)\)/g);
-        branchMarkers.forEach((branch, bi) => {
-          const branchEnd = bi + 1 < branchMarkers.length ? branchMarkers[bi+1].start : projSlice.length;
-          const branchSlice = projSlice.slice(branch.contentStart, branchEnd);
-          const branchNode = { name: branch.name, children: [] };
-          const folderMarkers = collectMarkers(branchSlice, /[%$]\s*Folder\s*\(([^)]+)\)/g);
-          folderMarkers.forEach((folder, fi) => {
-            const folderEnd = fi + 1 < folderMarkers.length ? folderMarkers[fi+1].start : branchSlice.length;
-            const folderSlice = branchSlice.slice(folder.contentStart, folderEnd);
-            const folderNode = { name: folder.name, children: [] };
-            collectFileTypes(folderSlice, fileMap, folderNode.children, fn => { htmlFilename = htmlFilename || fn; });
-            if (folderNode.children.length) branchNode.children.push(folderNode);
-          });
-          if (!branchNode.children.length) {
-            const direct = { name: '', children: [] };
-            collectFileTypes(branchSlice, fileMap, direct.children, fn => { htmlFilename = htmlFilename || fn; });
-            if (direct.children.length) branchNode.children.push(direct);
-          }
-          if (branchNode.children.length) tree.push(branchNode);
+
+      const branchMarkers = collectMarkers(clean, /[%$]\s*Branch\s*\(([^)]+)\)/g);
+      branchMarkers.forEach((branch, bi) => {
+        const branchEnd = bi + 1 < branchMarkers.length ? branchMarkers[bi+1].start : clean.length;
+        const branchSlice = clean.slice(branch.contentStart, branchEnd);
+        const branchNode = { name: branch.name, children: [] };
+        const folderMarkers = collectMarkers(branchSlice, /[%$]\s*Folder\s*\(([^)]+)\)/g);
+        folderMarkers.forEach((folder, fi) => {
+          const folderEnd = fi + 1 < folderMarkers.length ? folderMarkers[fi+1].start : branchSlice.length;
+          const folderSlice = branchSlice.slice(folder.contentStart, folderEnd);
+          const folderNode = { name: folder.name, children: [] };
+          collectFileTypes(folderSlice, fileMap, folderNode.children, fn => { htmlFilename = htmlFilename || fn; });
+          if (folderNode.children.length) branchNode.children.push(folderNode);
         });
-        if (!tree.length) {
-          const flat = { name: 'main', children: [{ name: '', children: [] }] };
-          collectFileTypes(projSlice, fileMap, flat.children[0].children, fn => { htmlFilename = htmlFilename || fn; });
-          if (flat.children[0].children.length) tree.push(flat);
+        if (!branchNode.children.length) {
+          const direct = { name: '', children: [] };
+          collectFileTypes(branchSlice, fileMap, direct.children, fn => { htmlFilename = htmlFilename || fn; });
+          if (direct.children.length) branchNode.children.push(direct);
         }
-        if (Object.keys(fileMap).length) projects[proj.name] = { fileMap, htmlFilename, tree };
+        if (branchNode.children.length) tree.push(branchNode);
       });
-      return Object.keys(projects).length ? { projects } : null;
+
+      // Fallback: no Branch markers — treat whole doc as flat
+      if (!tree.length) {
+        const flat = { name: 'main', children: [{ name: '', children: [] }] };
+        collectFileTypes(clean, fileMap, flat.children[0].children, fn => { htmlFilename = htmlFilename || fn; });
+        if (flat.children[0].children.length) tree.push(flat);
+      }
+
+      return Object.keys(fileMap).length ? { fileMap, htmlFilename, tree } : null;
     }
 
     function collectFileTypes(slice, fileMap, childArray, onIndex) {
@@ -972,7 +985,8 @@
         const ext = ftm[1].trim().toLowerCase();
         const isIndex = ftm[2].toUpperCase().includes('#INDEX');
         for (const em of ftm[3].matchAll(/\.(\w+)\s*\(@([^)]+)\)/g)) {
-          const filename = em[1].trim() + '.' + ext, tabId = em[2].trim();
+          const filename = em[1].trim() + '.' + ext;
+          const tabId = em[2].trim().replace(/^t\./, ''); // normalise — strip t. prefix if present
           if (!fileMap[filename]) fileMap[filename] = tabId;
           childArray.push({ name: filename, tabId, ext });
           if (isIndex) onIndex(filename);
@@ -980,17 +994,18 @@
       }
     }
 
-    async function fetchTab(tabId) {
+    // ── Fetch a tab from a SPECIFIC doc (not necessarily the master index) ──
+    async function fetchTabFromDoc(docId, tabId) {
       const id = String(tabId).replace(/^t\./, '');
-      const url = `https://docs.google.com/document/d/${DOC_ID}/export?format=txt&tab=t.${id}&cachebust=${Date.now()}`;
+      const url = `https://docs.google.com/document/d/${docId}/export?format=txt&tab=t.${id}&cachebust=${Date.now()}`;
       const res = await fetch(url, { cache: 'no-store' });
       if (!res.ok) throw new Error(`HTTP ${res.status} for tab t.${id}`);
       return (await res.text()).replace(/^\uFEFF/, '').trim();
     }
 
-    async function fetchAllFiles(fileMap, fallback = {}) {
+    async function fetchAllFilesFromDoc(docId, fileMap, fallback = {}) {
       return Promise.all(Object.keys(fileMap).map(name =>
-        fetchTab(fileMap[name]).then(content => ({ name, content }))
+        fetchTabFromDoc(docId, fileMap[name]).then(content => ({ name, content }))
           .catch(() => ({ name, content: fallback[name] || '' }))
       ));
     }
@@ -1032,25 +1047,41 @@
     function showWelcome() { hideLoading(); $('errorState').classList.remove('visible'); $('filePanel').classList.remove('visible'); $('welcomeState').style.display = ''; }
     function showError(msg, hint) { hideLoading(); $('welcomeState').style.display='none'; $('filePanel').classList.remove('visible'); $('errorState').classList.add('visible'); $('errorMsg').textContent=msg; $('errorHint').textContent=hint||''; }
 
+    // ── BOOT: fetch master index → fetch each project doc ──
     async function boot() {
       setStatus('loading', 'loading index…');
+      showLoading('Loading master index…', ['Fetching project list', 'Loading project docs', 'Ready']);
+      setStep(0);
       try {
-        const text = await fetchTab(INDEX_TAB);
-        const parsed = parseATCMap(text);
-        if (!parsed || !parsed.projects) {
-          const preview = JSON.stringify(text.slice(0,200));
-          throw new Error(`Could not parse projects. Received ${text.length} chars. First 200: ${preview}`);
+        const masterText = await fetchTabFromDoc(DOC_ID, '0');
+        const projectRefs = parseMasterIndex(masterText);
+        if (!projectRefs || !projectRefs.length) {
+          throw new Error('No projects found in master index. Expected format: .Name (@https://docs.google.com/...)');
         }
-        const { projects } = parsed;
-        const names = Object.keys(projects);
-        if (!names.length) throw new Error('No projects found in the ATC_Map.');
-        const projectList = names.map((name, i) => ({ name, color: COLORS[i%COLORS.length], ...projects[name] }));
-        renderSidebar(projectList);
-        setStatus('ok', `${projectList.length} project${projectList.length>1?'s':''}`);
-        setBreadcrumb(null, null); showWelcome();
+        setStep(1);
+        const projectList = [];
+        await Promise.all(projectRefs.map(async ({ name, url }, i) => {
+          const projDocId = extractDocId(url);
+          if (!projDocId) { console.warn(`[renderdoc] Could not extract doc ID from: ${url}`); return; }
+          try {
+            const projText = await fetchTabFromDoc(projDocId, '0');
+            const projData = parseProjectDoc(projText);
+            if (!projData) { console.warn(`[renderdoc] Could not parse project doc for: ${name}`); return; }
+            projectList[i] = { name, docId: projDocId, color: COLORS[i % COLORS.length], ...projData };
+          } catch(e) {
+            console.warn(`[renderdoc] Failed to load project "${name}":`, e.message);
+          }
+        }));
+        const loaded = projectList.filter(Boolean);
+        if (!loaded.length) throw new Error('No project docs could be loaded. Check that each project doc is shared publicly.');
+        setStep(2);
+        renderSidebar(loaded);
+        setStatus('ok', `${loaded.length} project${loaded.length > 1 ? 's' : ''}`);
+        setBreadcrumb(null, null);
+        showWelcome();
       } catch(err) {
         setStatus('err', 'failed');
-        showError('Could not load index: ' + err.message, 'Make sure the doc is shared as "Anyone with the link — Viewer".');
+        showError('Could not load index: ' + err.message, 'Make sure both the master index and all project docs are shared as "Anyone with the link — Viewer".');
         console.error('[renderdoc]', err);
       }
     }
@@ -1080,21 +1111,21 @@
           zipBtn.className = 'zip-btn';
           const zipName = proj.name + '_' + (branch.name || 'main');
           zipBtn.innerHTML = '<span class="zip-icon">⬇</span><span class="zip-label">Download ZIP</span><div class="zip-spinner"></div>';
-          zipBtn.addEventListener('click', e => { e.stopPropagation(); downloadZip(zipBtn, zipName, branchFileMap); });
+          zipBtn.addEventListener('click', e => { e.stopPropagation(); downloadZip(zipBtn, zipName, proj.docId, branchFileMap); });
           actionsRow.appendChild(zipBtn);
 
           const hotDcBtn = document.createElement('button');
           hotDcBtn.className = 'zip-btn';
           hotDcBtn.innerHTML = '<span>⚡</span><span class="hot-dc-label">Hot Doc Connect</span>';
           hotDcBtn.title = 'Download auto-deploy loader with live reload on every save';
-          hotDcBtn.addEventListener('click', e => { e.stopPropagation(); downloadHotDocConnect(hotDcBtn, proj.name); });
+          hotDcBtn.addEventListener('click', e => { e.stopPropagation(); downloadHotDocConnect(hotDcBtn, proj.name, proj.docId); });
           actionsRow.appendChild(hotDcBtn);
 
           const dcBtn = document.createElement('button');
           dcBtn.className = 'zip-btn';
           dcBtn.innerHTML = '<span>📄</span><span class="dc-label">Doc Connect</span>';
           dcBtn.title = 'Download auto-deploy loader (loads once, no live reload)';
-          dcBtn.addEventListener('click', e => { e.stopPropagation(); downloadDocConnect(dcBtn, proj.name); });
+          dcBtn.addEventListener('click', e => { e.stopPropagation(); downloadDocConnect(dcBtn, proj.name, proj.docId); });
           actionsRow.appendChild(dcBtn);
 
           branchChildren.appendChild(actionsRow);
@@ -1130,7 +1161,8 @@
               const folders = projChildren.querySelectorAll('.folder-children');
               if (folders.length === 1) { folders.forEach(c => c.classList.add('open')); projChildren.querySelectorAll('.folder-row').forEach(b => b.classList.add('open')); }
             }
-            currentProject = proj; currentProjectFileMap = proj.fileMap; setBreadcrumb(proj.name, null);
+            currentProject = proj; currentProjectDocId = proj.docId;
+            currentProjectFileMap = proj.fileMap; setBreadcrumb(proj.name, null);
           } else { showWelcome(); setBreadcrumb(null, null); }
         });
         body.appendChild(projBtn); body.appendChild(projChildren);
@@ -1144,7 +1176,8 @@
       btn.innerHTML = `<div class="file-ext-dot" style="background:${color}"></div><span class="file-label">${file.name}</span>`;
       btn.addEventListener('click', () => {
         $('sidebarBody').querySelectorAll('.file-row').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active'); currentProject = proj; currentProjectFileMap = proj.fileMap;
+        btn.classList.add('active');
+        currentProject = proj; currentProjectDocId = proj.docId; currentProjectFileMap = proj.fileMap;
         openFile(file.name, file.tabId, file.ext, color);
       });
       container.appendChild(btn);
@@ -1156,7 +1189,7 @@
       const steps = isHTML ? [`Fetching ${filename}`,'Inlining CSS / SCSS','Inlining JS','Fixing CDN order','Ready'] : [`Fetching ${filename}`,'Ready'];
       showLoading(`Loading ${filename}…`, steps); setStep(0);
       try {
-        const rawContent = await fetchTab(tabId);
+        const rawContent = await fetchTabFromDoc(currentProjectDocId, tabId);
         currentFileContent = rawContent; setStep(1);
         currentInlinedHTML = isHTML ? await buildInlinedHTML(rawContent) : wrapAsHTML(rawContent, ext, filename);
         hideLoading();
@@ -1166,7 +1199,7 @@
         $('filePanel').classList.add('visible'); updateRunBtn(false);
         toast(`✓ ${filename} ready — press Run`);
       } catch(err) {
-        showError(`Could not load ${filename}: ${err.message}`, 'Check the tab ID and ensure the doc is public.');
+        showError(`Could not load ${filename}: ${err.message}`, 'Check the tab ID and ensure the project doc is public.');
         toast('Failed to load file', true);
       }
     }
@@ -1178,9 +1211,8 @@
         if (/^https?:\/\//i.test(href)) continue;
         const tabId = currentProjectFileMap[href]; if (!tabId) continue;
         try {
-          const css = await fetchTab(tabId);
-          let output;
-          if (href.toLowerCase().endsWith('.scss')) { output = await compileSass(css).catch(() => css); } else { output = css; }
+          const css = await fetchTabFromDoc(currentProjectDocId, tabId);
+          let output = href.toLowerCase().endsWith('.scss') ? await compileSass(css).catch(() => css) : css;
           result = result.split(fullTag).join(`<style>/* ${href} */\n${output}\n</style>`);
         } catch(e) {}
       }
@@ -1190,7 +1222,7 @@
         if (/^https?:\/\//i.test(src)) continue;
         const tabId = currentProjectFileMap[src]; if (!tabId) continue;
         try {
-          const js = await fetchTab(tabId);
+          const js = await fetchTabFromDoc(currentProjectDocId, tabId);
           const typeAttr = /type=["']module["']/i.test(attrs) ? ' type="module"' : '';
           result = result.split(fullTag).join(`<script${typeAttr}>/* ${src} */\n${js}\n<\/script>`);
         } catch(e) {}
@@ -1246,10 +1278,11 @@
     async function deployNow() {
       if (!currentInlinedHTML) { toast('No file loaded', true); return; }
       stopPoller();
-      const allFiles = await fetchAllFiles(currentProjectFileMap);
+      const allFiles = await fetchAllFilesFromDoc(currentProjectDocId, currentProjectFileMap);
       _pollContents = {}; _pollHashes = {};
       allFiles.forEach(f => { _pollContents[f.name] = f.content; _pollHashes[f.name] = hashStr(f.content); });
       _pollFileMap = { ...currentProjectFileMap }; _pollFilename = currentFilename;
+      _pollDocId = currentProjectDocId;
       const htmlToOpen = injectHotReload(currentInlinedHTML);
       const blob = new Blob([htmlToOpen], { type: 'text/html' });
       const blobUrl = URL.createObjectURL(blob);
@@ -1265,11 +1298,12 @@
     async function pollForChanges() {
       if (_pollUpdating) return; _pollUpdating = true;
       try {
-        const mapText = await fetchTab(INDEX_TAB); const mapParsed = parseATCMap(mapText);
-        if (!mapParsed || !mapParsed.projects) return;
-        const projData = mapParsed.projects[currentProject.name]; if (!projData) return;
+        // Re-parse the project's own ATC_Map (tab 0) to pick up file map changes
+        const mapText = await fetchTabFromDoc(_pollDocId, '0');
+        const projData = parseProjectDoc(mapText);
+        if (!projData) return;
         const freshMap = projData.fileMap;
-        const fetched = await fetchAllFiles(freshMap, _pollContents);
+        const fetched = await fetchAllFilesFromDoc(_pollDocId, freshMap, _pollContents);
         let changed = false; const freshHashes = {};
         fetched.forEach(f => { freshHashes[f.name] = hashStr(f.content); if (freshHashes[f.name] !== _pollHashes[f.name]) changed = true; });
         if (Object.keys(freshMap).sort().join('|') !== Object.keys(_pollFileMap).sort().join('|')) changed = true;
@@ -1304,7 +1338,7 @@
       currentInlinedHTML = ''; currentFileContent = ''; currentFilename = '';
     }
 
-    async function downloadZip(btn, projName, fileMap) {
+    async function downloadZip(btn, projName, docId, fileMap) {
       if (typeof JSZip === 'undefined') { toast('JSZip not loaded yet', true); return; }
       btn.disabled = true; btn.classList.add('zipping');
       btn.querySelector('.zip-label').textContent = 'Zipping…';
@@ -1313,7 +1347,7 @@
         const zip = new JSZip(); const folder = zip.folder(projName);
         await Promise.all(Object.keys(fileMap).map(async filename => {
           try {
-            const raw = await fetchTab(fileMap[filename]);
+            const raw = await fetchTabFromDoc(docId, fileMap[filename]);
             const ext = filename.split('.').pop().toLowerCase();
             if (ext === 'scss') {
               try { const css = await compileSass(raw); folder.file(filename.replace(/\.scss$/i,'.css'), css); }
@@ -1331,11 +1365,11 @@
       finally { btn.disabled = false; btn.classList.remove('zipping'); btn.querySelector('.zip-label').textContent = 'Download ZIP'; }
     }
 
-    function downloadHotDocConnect(btn, projName) {
+    function downloadHotDocConnect(btn, projName, projDocId) {
       btn.disabled = true;
       btn.querySelector('.hot-dc-label').textContent = 'Building…';
       try {
-        const d = DOC_ID;
+        const d = projDocId;   // project's own doc ID — no master index needed
         const p = projName;
         const lines = [
           '<!DOCTYPE html>',
@@ -1370,21 +1404,14 @@
           '    set: function(k,v){ try { sessionStorage.setItem(k,v); } catch(e) {} }',
           '  };',
           '',
-          '  function parseATCMap(text, projectName) {',
+          '  function parseATCMap(text) {',
           '    const clean = text.replace(/[\\u2018\\u2019]/g,"\'").replace(/[\\u201C\\u201D]/g,\'"\').replace(/\\r\\n|\\r/g,\'\\n\').replace(/\\*{1,3}([^*\\n]+)\\*{1,3}/g,\'$1\').replace(/_{1,3}([^_\\n]+)_{1,3}/g,\'$1\');',
-          '    const esc = projectName.replace(/[.*+?^${}()|[\\]\\\\]/g, \'\\\\$&\');',
-          '    const startRe = new RegExp(\'\\\\$\\\\s*Project\\\\s*\\\\(\\\\s*\' + esc + \'\\\\s*\\\\)\');',
-          '    const startMatch = startRe.exec(clean);',
-          '    if (!startMatch) return null;',
-          '    const after = clean.slice(startMatch.index + startMatch[0].length);',
-          '    const nextProj = after.search(/\\$\\s*Project\\s*\\(/);',
-          '    const projectSlice = nextProj === -1 ? after : after.slice(0, nextProj);',
           '    const fileMap = {}; let htmlFn = null;',
-          '    const ftRe = /%\\s*FileType\\s*\\(([^)]+)\\)((?:\\s*#\\w+)*)[^{]*\\{([^}]*)\\}/g; let fm;',
-          '    while ((fm = ftRe.exec(projectSlice)) !== null) {',
+          '    const ftRe = /[%$]\\s*FileType\\s*\\(([^)]+)\\)((?:[^{])*)\\{([^}]*)\\}/g; let fm;',
+          '    while ((fm = ftRe.exec(clean)) !== null) {',
           '      const ext = fm[1].trim().toLowerCase(), isIndex = fm[2].toUpperCase().includes(\'#INDEX\');',
           '      for (const em of fm[3].matchAll(/\\.([\\w]+)\\(@([^)]+)\\)/g)) {',
-          '        const fn = em[1] + \'.\' + ext; fileMap[fn] = em[2].trim(); if (isIndex) htmlFn = fn;',
+          '        const fn = em[1] + \'.\' + ext; const tid = em[2].trim().replace(/^t\\./, \'\'); fileMap[fn] = tid; if (isIndex) htmlFn = fn;',
           '      }',
           '    }',
           '    if (!Object.keys(fileMap).length) return null;',
@@ -1436,7 +1463,7 @@
           '  async function resolveFileMap() {',
           '    try { const c = store.get(CACHE_KEY); if (c) { console.log(\'[loader] from cache\'); return JSON.parse(c); } } catch(e) {}',
           '    const dirText = await _prefetchDir;',
-          '    const parsed = parseATCMap(dirText, PROJECT);',
+          '    const parsed = parseATCMap(dirText);',
           '    if (!parsed || !parsed.fileMap) throw new Error(\'Parse failed for "\' + PROJECT + \'"\');',
           '    if (!parsed.htmlFilename) throw new Error(\'No #INDEX HTML found for "\' + PROJECT + \'"\');',
           '    store.set(CACHE_KEY, JSON.stringify(parsed));',
@@ -1484,11 +1511,11 @@
       }
     }
 
-    function downloadDocConnect(btn, projName) {
+    function downloadDocConnect(btn, projName, projDocId) {
       btn.disabled = true;
       btn.querySelector('.dc-label').textContent = 'Building…';
       try {
-        const d = DOC_ID;
+        const d = projDocId;   // project's own doc ID — no master index needed
         const p = projName;
         const lines = [
           '<!DOCTYPE html>',
@@ -1525,21 +1552,14 @@
           '    set: function(k,v){ try { sessionStorage.setItem(k,v); } catch(e) {} }',
           '  };',
           '',
-          '  function parseATCMap(text, projectName) {',
+          '  function parseATCMap(text) {',
           '    const clean = text.replace(/[\\u2018\\u2019]/g,"\'").replace(/[\\u201C\\u201D]/g,\'"\').replace(/\\r\\n|\\r/g,\'\\n\').replace(/\\*{1,3}([^*\\n]+)\\*{1,3}/g,\'$1\').replace(/_{1,3}([^_\\n]+)_{1,3}/g,\'$1\');',
-          '    const esc = projectName.replace(/[.*+?^${}()|[\\]\\\\]/g, \'\\\\$&\');',
-          '    const startRe = new RegExp(\'\\\\$\\\\s*Project\\\\s*\\\\(\\\\s*\' + esc + \'\\\\s*\\\\)\');',
-          '    const startMatch = startRe.exec(clean);',
-          '    if (!startMatch) return null;',
-          '    const after = clean.slice(startMatch.index + startMatch[0].length);',
-          '    const nextProj = after.search(/\\$\\s*Project\\s*\\(/);',
-          '    const projectSlice = nextProj === -1 ? after : after.slice(0, nextProj);',
           '    const fileMap = {}; let htmlFn = null;',
-          '    const ftRe = /%\\s*FileType\\s*\\(([^)]+)\\)((?:\\s*#\\w+)*)[^{]*\\{([^}]*)\\}/g; let fm;',
-          '    while ((fm = ftRe.exec(projectSlice)) !== null) {',
+          '    const ftRe = /[%$]\\s*FileType\\s*\\(([^)]+)\\)((?:[^{])*)\\{([^}]*)\\}/g; let fm;',
+          '    while ((fm = ftRe.exec(clean)) !== null) {',
           '      const ext = fm[1].trim().toLowerCase(), isIndex = fm[2].toUpperCase().includes(\'#INDEX\');',
           '      for (const em of fm[3].matchAll(/\\.([\\w]+)\\(@([^)]+)\\)/g)) {',
-          '        const fn = em[1] + \'.\' + ext; fileMap[fn] = em[2].trim(); if (isIndex) htmlFn = fn;',
+          '        const fn = em[1] + \'.\' + ext; const tid = em[2].trim().replace(/^t\\./, \'\'); fileMap[fn] = tid; if (isIndex) htmlFn = fn;',
           '      }',
           '    }',
           '    if (!Object.keys(fileMap).length) return null;',
@@ -1617,7 +1637,7 @@
           '  async function resolveFileMap() {',
           '    try { const c = store.get(CACHE_KEY); if (c) { console.log(\'[loader] from cache\'); return JSON.parse(c); } } catch(e) {}',
           '    const dirText = await _prefetchDir;',
-          '    const parsed = parseATCMap(dirText, PROJECT);',
+          '    const parsed = parseATCMap(dirText);',
           '    if (!parsed || !parsed.fileMap) throw new Error(\'Parse failed for "\' + PROJECT + \'"\');',
           '    if (!parsed.htmlFilename) throw new Error(\'No #INDEX HTML found for "\' + PROJECT + \'"\');',
           '    store.set(CACHE_KEY, JSON.stringify(parsed));',
@@ -1763,7 +1783,7 @@ ${TEMPLATE_TEXT}
         const saved = localStorage.getItem('renderdoc_doc_id');
         if (saved) {
           DOC_ID = saved;
-          document.getElementById('urlInput').placeholder = 'Doc loaded — paste a new URL to switch';
+          document.getElementById('urlInput').placeholder = 'Master index loaded — paste a new URL to switch';
           boot();
         }
       } catch(e) {}
